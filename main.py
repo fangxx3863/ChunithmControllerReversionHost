@@ -140,8 +140,8 @@ class MainWindow(QMainWindow):
         writeConf.append(self.ui.lineEdit_ir4.text())
         writeConf.append(self.ui.lineEdit_ir5.text())
         writeConf.append(self.ui.lineEdit_ir6.text())
-        writeConf.append(self.ui.checkBox_IR.isChecked())
-        writeConf.append(self.ui.checkBox_Slider.isChecked())
+        writeConf.append(int(self.ui.checkBox_IR.isChecked()))
+        writeConf.append(int(self.ui.checkBox_Slider.isChecked()))
         keys = config[nowConf].keys()
         i = 0
         for key in keys:
@@ -290,8 +290,8 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_ir4.setText(keyValue[35])
         self.ui.lineEdit_ir5.setText(keyValue[36])
         self.ui.lineEdit_ir6.setText(keyValue[37])
-        self.ui.checkBox_IR.setChecked(bool(keyValue[38]))
-        self.ui.checkBox_Slider.setChecked(bool(keyValue[39]))
+        self.ui.checkBox_IR.setChecked(int(keyValue[38]))
+        self.ui.checkBox_Slider.setChecked(int(keyValue[39]))
         self.ui.plainTextEdit_log.appendPlainText("读取配置文件内容成功.")
         
     def showClientData(self, keyValue):
