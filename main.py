@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
                 if recv:
                     break
         if recv == "KeySetReady":
+            time.sleep(0.5)
             writeKeys = ""
             writeKeys += self.ui.lineEdit_K1.text()
             writeKeys += self.ui.lineEdit_K2.text()
@@ -77,6 +78,14 @@ class MainWindow(QMainWindow):
             writeKeys += self.ui.lineEdit_ir4.text()
             writeKeys += self.ui.lineEdit_ir5.text()
             writeKeys += self.ui.lineEdit_ir6.text()
+            if self.ui.checkBox_IR.isChecked():
+                writeKeys += "y"
+            else:
+                writeKeys += "n"
+            if self.ui.checkBox_Slider.isChecked():
+                writeKeys += "y"
+            else:
+                writeKeys += "n"
             ser.write(writeKeys.encode("utf8"))
             self.ui.plainTextEdit_log.appendPlainText("写入下位机配置成功.")
             
@@ -131,6 +140,8 @@ class MainWindow(QMainWindow):
         writeConf.append(self.ui.lineEdit_ir4.text())
         writeConf.append(self.ui.lineEdit_ir5.text())
         writeConf.append(self.ui.lineEdit_ir6.text())
+        writeConf.append(self.ui.checkBox_IR.isChecked())
+        writeConf.append(self.ui.checkBox_Slider.isChecked())
         keys = config[nowConf].keys()
         i = 0
         for key in keys:
@@ -190,6 +201,8 @@ class MainWindow(QMainWindow):
             config[Name]['IR4'] = '3'
             config[Name]['IR5'] = '4'
             config[Name]['IR6'] = '5'
+            config[Name]['IR'] = 1
+            config[Name]['Slider'] = 1
             config.write()
             self.ui.plainTextEdit_log.appendPlainText("新建配置文件成功.")
             self.readConfList()
@@ -277,6 +290,8 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_ir4.setText(keyValue[35])
         self.ui.lineEdit_ir5.setText(keyValue[36])
         self.ui.lineEdit_ir6.setText(keyValue[37])
+        self.ui.checkBox_IR.setChecked(bool(keyValue[38]))
+        self.ui.checkBox_Slider.setChecked(bool(keyValue[39]))
         self.ui.plainTextEdit_log.appendPlainText("读取配置文件内容成功.")
         
     def showClientData(self, keyValue):
@@ -318,6 +333,14 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_ir4.setText(keyValue[35])
         self.ui.lineEdit_ir5.setText(keyValue[36])
         self.ui.lineEdit_ir6.setText(keyValue[37])
+        if keyValue[38] == "y":
+            self.ui.checkBox_IR.setChecked(1)
+        else:
+            self.ui.checkBox_IR.setChecked(0)
+        if keyValue[39] == "y":
+            self.ui.checkBox_Slider.setChecked(1)
+        else:
+            self.ui.checkBox_Slider.setChecked(0)
     
     def serial_ports(self):
         if sys.platform.startswith('win'):
