@@ -205,7 +205,10 @@ class MainWindow(QMainWindow):
             config[Name]['Slider'] = 1
             config.write()
             self.ui.plainTextEdit_log.appendPlainText("新建配置文件成功.")
+            self.ui.list_conf.clear()
+            self.ui.del_conf.clear()
             self.readConfList()
+            self.readDelConfList()
             self.showConf(Name)
         
     def writeConf(self, Key, Cmd, List):
@@ -226,7 +229,6 @@ class MainWindow(QMainWindow):
         for item in List:
             action = self.ui.list_conf.addAction(item)
             action.triggered.connect(lambda f=self.showConf,arg=item:f(arg))
-        self.readDelConfList()
         self.ui.plainTextEdit_log.appendPlainText("读取配置文件列表成功.")
     
     def readDelConfList(self):
@@ -241,8 +243,8 @@ class MainWindow(QMainWindow):
         del config[List]
         config.write()
         self.ui.list_conf.clear()
-        self.ui.del_conf.clear()
         self.readConfList()
+        self.ui.del_conf.clear()
         self.readDelConfList()
         self.ui.plainTextEdit_log.appendPlainText("删除配置文件列表成功.")
     
