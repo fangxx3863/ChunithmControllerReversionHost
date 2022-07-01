@@ -14,6 +14,7 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.readConfList()
+        self.readDelConfList()
 
     def on_read(self):
         ser = serial.Serial(device, 115200)     # 初始化下位机读取
