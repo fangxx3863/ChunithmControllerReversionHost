@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.readConfList()
         self.readDelConfList()
 
-    def on_read(self):
+    def on_read(self):  # 点击读取设备
         ser = serial.Serial(device, 115200)     # 初始化下位机读取
         ser.write("GetKeys".encode("utf8"))
         while True:
@@ -29,7 +29,7 @@ class MainWindow(QMainWindow):
         self.showClientData(clientData)
         self.ui.plainTextEdit_log.appendPlainText("读取下位机配置成功.")
     
-    def on_write(self):
+    def on_write(self): # 点击写入设备
         ser = serial.Serial(device, 115200)     # 初始化下位机读取
         ser.write("SetKeys".encode("utf8"))
         while True:
@@ -91,7 +91,7 @@ class MainWindow(QMainWindow):
             self.ui.plainTextEdit_log.appendPlainText("写入下位机配置成功.")
             
         
-    def on_check(self):
+    def on_check(self): # 点击查找设备
         global device
         try:
             device = self.findDevice()       # 查找下位机设备ID
@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
         except:
             self.ui.plainTextEdit_log.appendPlainText("未找到下位机.")
         
-    def on_save(self):
+    def on_save(self):  # 点击保存配置文件
         config = ConfigObj("setting.ini",encoding='UTF8')
         writeConf = []
         writeConf.append(self.ui.lineEdit_K1.text())
@@ -151,7 +151,7 @@ class MainWindow(QMainWindow):
         config.write()
         self.ui.plainTextEdit_log.appendPlainText("写入配置文件成功.")
         
-    def on_exit(self):
+    def on_exit(self):  # 点击退出应用
         sys.exit(0)
         
     def newConf(self):
