@@ -2,19 +2,25 @@ import sys
 import glob
 import time
 from main_gui import Ui_MainWindow
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+# from PySide2.QtCore import *
+# from PySide2.QtGui import *
+# from PySide2.QtWidgets import *
+from PySide2.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QLineEdit, QApplication
+from PySide2.QtCore import QThread, QObject, Signal
+
 import serial
 from configobj import ConfigObj
 
 class MainWindow(QMainWindow):
+    findLock = 0
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.readConfList()
         self.readDelConfList()
+        
+        
 
     def on_read(self):  # 点击读取设备
         ser = serial.Serial(device, 115200)     # 初始化下位机读取
@@ -22,7 +28,8 @@ class MainWindow(QMainWindow):
         while True:
             count = ser.inWaiting() # 获取串口缓冲区数据
             if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
+                data = ser.readline()
+                recv = str(data[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
                 if recv:
                     break
         clientData = recv.split("/")
@@ -87,17 +94,36 @@ class MainWindow(QMainWindow):
                 writeKeys += "y"
             else:
                 writeKeys += "n"
-            ser.write(writeKeys.encode("utf8"))
+            # writeKeys += self.ui.lineEdit_threshold.text()
+            data = writeKeys.encode("utf8") + int(self.ui.lineEdit_threshold.text()).to_bytes(1, byteorder="big")
+            # print(data)
+            ser.write(data)
             self.ui.plainTextEdit_log.appendPlainText("写入下位机配置成功.")
             
         
     def on_check(self): # 点击查找设备
-        global device
-        try:
-            device = self.findDevice()       # 查找下位机设备ID
-            if device:
-                self.ui.plainTextEdit_log.appendPlainText("已找到下位机.")
-        except:
+        self.ui.plainTextEdit_log.appendPlainText("正在查找设备,请勿重复点击...")
+        
+        if not self.findLock:
+            # device = self.findDevice()       # 查找下位机设备ID
+            self.thread = QThread()
+            self.worker = Worker()
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.findDevice)
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.worker.finished.connect(self.findItLog)
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.thread.start()
+            self.findLock = 1
+            # if device:
+            #     self.ui.plainTextEdit_log.appendPlainText("已找到下位机.")
+            
+    def findItLog(self):
+        self.findLock = 0
+        if device:
+            self.ui.plainTextEdit_log.appendPlainText("已找到下位机.")
+        else:
             self.ui.plainTextEdit_log.appendPlainText("未找到下位机.")
         
     def on_save(self):  # 点击保存配置文件
@@ -143,6 +169,7 @@ class MainWindow(QMainWindow):
         writeConf.append(self.ui.lineEdit_ir6.text())
         writeConf.append(int(self.ui.checkBox_IR.isChecked()))
         writeConf.append(int(self.ui.checkBox_Slider.isChecked()))
+        writeConf.append(str(self.ui.lineEdit_threshold.text()))
         keys = config[nowConf].keys()
         i = 0
         for key in keys:
@@ -150,6 +177,32 @@ class MainWindow(QMainWindow):
             i += 1
         config.write()
         self.ui.plainTextEdit_log.appendPlainText("写入配置文件成功.")
+        
+    def on_gloves(self):
+        ser = serial.Serial(device, 115200)     # 初始化下位机读取
+        ser.write("Gloves".encode("utf8"))
+        while True:
+            count = ser.inWaiting() # 获取串口缓冲区数据
+            if count !=0:
+                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
+                if recv:
+                    break
+        if recv == "Change to gloves":
+            self.ui.plainTextEdit_log.appendPlainText("已切换至手套模式.")
+        pass
+    
+    def on_hands(self):
+        ser = serial.Serial(device, 115200)     # 初始化下位机读取
+        ser.write("Hands".encode("utf8"))
+        while True:
+            count = ser.inWaiting() # 获取串口缓冲区数据
+            if count !=0:
+                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
+                if recv:
+                    break
+        if recv == "Change to hands":
+            self.ui.plainTextEdit_log.appendPlainText("已切换至空手模式.")
+        pass
         
     def on_exit(self):  # 点击退出应用
         sys.exit(0)
@@ -204,6 +257,7 @@ class MainWindow(QMainWindow):
             config[Name]['IR6'] = '5'
             config[Name]['IR'] = 1
             config[Name]['Slider'] = 1
+            config[Name]['THRESHOLDS'] = 70
             config.write()
             self.ui.plainTextEdit_log.appendPlainText("新建配置文件成功.")
             self.ui.list_conf.clear()
@@ -295,6 +349,7 @@ class MainWindow(QMainWindow):
         self.ui.lineEdit_ir6.setText(keyValue[37])
         self.ui.checkBox_IR.setChecked(int(keyValue[38]))
         self.ui.checkBox_Slider.setChecked(int(keyValue[39]))
+        self.ui.lineEdit_threshold.setText(str(keyValue[40]))
         self.ui.plainTextEdit_log.appendPlainText("读取配置文件内容成功.")
         
     def showClientData(self, keyValue):
@@ -344,6 +399,7 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_Slider.setChecked(1)
         else:
             self.ui.checkBox_Slider.setChecked(0)
+        self.ui.lineEdit_threshold.setText(keyValue[40])
     
     def serial_ports(self):
         if sys.platform.startswith('win'):
@@ -385,6 +441,67 @@ class MainWindow(QMainWindow):
                     ser.close()
                     return devId
         
+class Worker(QObject):
+    deviceID = 0
+    finished = Signal(int)
+    findIt = Signal(int)
+    
+    
+    def serial_ports(self):
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            # 这不包括当前的终端"/dev/tty"
+            ports = glob.glob('/dev/tty[A-Za-z]*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.*')
+        else:
+            raise EnvironmentError('Unsupported platform')
+
+        result = []
+        for port in ports:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, serial.SerialException):
+                pass
+        if len(result) == 0:
+            raise Exception     # 结果为空抛出异常
+        if not result:
+            return 0
+        return result
+    
+    def findDevice(self):
+        # print("Finding...")
+        global device
+        device = 0
+        try: 
+            tty = self.serial_ports()
+        except:
+            # print("No TTY")
+            self.finished.emit(1)
+        if not tty:
+            # print("No TTY")
+            self.finished.emit(1)
+        for devId in tty:
+            print("DevID: " + devId)
+            ser = serial.Serial(devId, 115200, timeout=5)
+            count = 0
+            ser.write('check'.encode("utf8"))       # 发送Check命令
+            t1 = int(time.time())
+            while not count:
+                count = ser.inWaiting() # 获取串口缓冲区数据
+                if int(time.time()) - t1 > 1:
+                    break
+            if count !=0:
+                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
+                if recv == "this":      # 检测下位机是否返回数据
+                    ser.close()
+                    self.deviceID = devId
+                    device = devId
+                    self.findIt.emit(1)
+        self.finished.emit(1)
 
 if __name__ == "__main__":
     app = QApplication([])
