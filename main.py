@@ -1,15 +1,79 @@
 import sys
-import glob
-import time
+from logging import raiseExceptions
+from pywinusb import hid
 from main_gui import Ui_MainWindow
 # from PySide2.QtCore import *
 # from PySide2.QtGui import *
 # from PySide2.QtWidgets import *
 from PySide2.QtWidgets import QMainWindow, QInputDialog, QMessageBox, QLineEdit, QApplication
-from PySide2.QtCore import QThread, QObject, Signal
-
-import serial
 from configobj import ConfigObj
+
+class USB:
+    def data_handler(self, data): # 数据回调
+            self.rawData = data
+            decData = ""
+            data.pop(0)
+            for i in data:
+                if i != 0:
+                    decData += chr(i)
+            self.decData = decData
+    
+    def __init__(self, VID, PID):   # 初始化
+        self.rawData = []
+        self.decData = 0
+        self.VID = VID
+        self.PID = PID
+        filter = hid.HidDeviceFilter(vendor_id = VID, product_id = PID)
+        devices = filter.get_devices()
+        if devices:
+            global device
+            device = devices[0]
+            device.open()
+            device.set_raw_data_handler(self.data_handler)
+        else:
+            raiseExceptions()
+            
+    def Setup(self):
+        filter = hid.HidDeviceFilter(vendor_id = self.VID, product_id = self.PID)
+        devices = filter.get_devices()
+        if devices:
+            global device
+            device = devices[0]
+            device.open()
+            device.set_raw_data_handler(self.data_handler)
+        else:
+            raiseExceptions()
+        
+    def sendDecData(self, data):    # 发送字符串
+        report = device.find_output_reports()
+        sdata = [6]     # ReportID 6
+        for i in list(data):
+            sdata.append(ord(i))
+        for i in range(64 - len(sdata)):
+            sdata.append(0)
+        # print(sdata)
+        report[0].set_raw_data(bytes(sdata))
+        report[0].send()
+    
+    def sendRawData(self, data):    # 发送数组
+        report = device.find_output_reports()
+        sdata = [6]     # ReportID 6
+        for i in data:
+            sdata.append(i)
+        for i in range(64 - len(sdata)):
+            sdata.append(0)
+        report[0].set_raw_data(bytes(sdata))
+        report[0].send()
+
+    def receiveDecData(self):   # 接收解码数据
+        if self.decData != 0:
+            return self.decData
+        return 0
+    
+    def receiveRawData(self):   # 接收原始数据
+        if self.rawData != 0:
+            return self.rawData
+        return 0
 
 class MainWindow(QMainWindow):
     findLock = 0
@@ -17,107 +81,212 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.on_check()
         self.readConfList()
         self.readDelConfList()
         
-        
+    def emptyCheck(self):
+        if self.ui.lineEdit_K1.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K1不可为空!")
+            return 1
+        if self.ui.lineEdit_K2.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K2不可为空!")
+            return 1
+        if self.ui.lineEdit_K3.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K3不可为空!")
+            return 1
+        if self.ui.lineEdit_K4.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K4不可为空!")
+            return 1
+        if self.ui.lineEdit_K5.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K5不可为空!")
+            return 1
+        if self.ui.lineEdit_K6.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K6不可为空!")
+            return 1
+        if self.ui.lineEdit_K7.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K7不可为空!")
+            return 1
+        if self.ui.lineEdit_K8.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K8不可为空!")
+            return 1
+        if self.ui.lineEdit_K9.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K9不可为空!")
+            return 1
+        if self.ui.lineEdit_K10.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K10不可为空!")
+            return 1
+        if self.ui.lineEdit_K11.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K11不可为空!")
+            return 1
+        if self.ui.lineEdit_K12.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K12不可为空!")
+            return 1
+        if self.ui.lineEdit_K13.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K13不可为空!")
+            return 1
+        if self.ui.lineEdit_K14.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K14不可为空!")
+            return 1
+        if self.ui.lineEdit_K15.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K15不可为空!")
+            return 1
+        if self.ui.lineEdit_K16.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K16不可为空!")
+            return 1
+        if self.ui.lineEdit_K17.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K17不可为空!")
+            return 1
+        if self.ui.lineEdit_K18.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K18不可为空!")
+            return 1
+        if self.ui.lineEdit_K19.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K19不可为空!")
+            return 1
+        if self.ui.lineEdit_K20.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K20不可为空!")
+            return 1
+        if self.ui.lineEdit_K21.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K21不可为空!")
+            return 1
+        if self.ui.lineEdit_K22.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K22不可为空!")
+            return 1
+        if self.ui.lineEdit_K23.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K23不可为空!")
+            return 1
+        if self.ui.lineEdit_K24.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K24不可为空!")
+            return 1
+        if self.ui.lineEdit_K25.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K25不可为空!")
+            return 1
+        if self.ui.lineEdit_K26.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K26不可为空!")
+            return 1
+        if self.ui.lineEdit_K27.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K27不可为空!")
+            return 1
+        if self.ui.lineEdit_K28.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K28不可为空!")
+            return 1
+        if self.ui.lineEdit_K29.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K29不可为空!")
+            return 1
+        if self.ui.lineEdit_K30.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K30不可为空!")
+            return 1
+        if self.ui.lineEdit_K31.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K31不可为空!")
+            return 1
+        if self.ui.lineEdit_K32.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("K32不可为空!")
+            return 1
+        if self.ui.lineEdit_ir1.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR1不可为空!")
+            return 1
+        if self.ui.lineEdit_ir2.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR2不可为空!")
+            return 1
+        if self.ui.lineEdit_ir3.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR3不可为空!")
+            return 1
+        if self.ui.lineEdit_ir4.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR4不可为空!")
+            return 1
+        if self.ui.lineEdit_ir5.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR5不可为空!")
+            return 1
+        if self.ui.lineEdit_ir6.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("IR6不可为空!")
+            return 1
+        if self.ui.lineEdit_threshold.text() == "":
+            self.ui.plainTextEdit_log.appendPlainText("触摸阈值不可为空!")
+            return 1
 
     def on_read(self):  # 点击读取设备
-        ser = serial.Serial(device, 115200)     # 初始化下位机读取
-        ser.write("GetKeys".encode("utf8"))
+        HID.sendDecData("GetKeys%")
         while True:
-            count = ser.inWaiting() # 获取串口缓冲区数据
-            if count !=0:
-                data = ser.readline()
-                recv = str(data[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv:
+            try:
+                pdata = HID.receiveDecData().split("/")
+                if pdata != 0:
                     break
-        clientData = recv.split("/")
-        self.showClientData(clientData)
+            except:
+                pass
+        sdata = list(pdata[0])
+        sdata.append(pdata[1])
+        self.showClientData(sdata)
         self.ui.plainTextEdit_log.appendPlainText("读取下位机配置成功.")
     
     def on_write(self): # 点击写入设备
-        ser = serial.Serial(device, 115200)     # 初始化下位机读取
-        ser.write("SetKeys".encode("utf8"))
-        while True:
-            count = ser.inWaiting() # 获取串口缓冲区数据
-            if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv:
-                    break
-        if recv == "KeySetReady":
-            time.sleep(0.5)
-            writeKeys = ""
-            writeKeys += self.ui.lineEdit_K1.text()
-            writeKeys += self.ui.lineEdit_K2.text()
-            writeKeys += self.ui.lineEdit_K3.text()
-            writeKeys += self.ui.lineEdit_K4.text()
-            writeKeys += self.ui.lineEdit_K5.text()
-            writeKeys += self.ui.lineEdit_K6.text()
-            writeKeys += self.ui.lineEdit_K7.text()
-            writeKeys += self.ui.lineEdit_K8.text()
-            writeKeys += self.ui.lineEdit_K9.text()
-            writeKeys += self.ui.lineEdit_K10.text()
-            writeKeys += self.ui.lineEdit_K11.text()
-            writeKeys += self.ui.lineEdit_K12.text()
-            writeKeys += self.ui.lineEdit_K13.text()
-            writeKeys += self.ui.lineEdit_K14.text()
-            writeKeys += self.ui.lineEdit_K15.text()
-            writeKeys += self.ui.lineEdit_K16.text()
-            writeKeys += self.ui.lineEdit_K17.text()
-            writeKeys += self.ui.lineEdit_K18.text()
-            writeKeys += self.ui.lineEdit_K19.text()
-            writeKeys += self.ui.lineEdit_K20.text()
-            writeKeys += self.ui.lineEdit_K21.text()
-            writeKeys += self.ui.lineEdit_K22.text()
-            writeKeys += self.ui.lineEdit_K23.text()
-            writeKeys += self.ui.lineEdit_K24.text()
-            writeKeys += self.ui.lineEdit_K25.text()
-            writeKeys += self.ui.lineEdit_K26.text()
-            writeKeys += self.ui.lineEdit_K27.text()
-            writeKeys += self.ui.lineEdit_K28.text()
-            writeKeys += self.ui.lineEdit_K29.text()
-            writeKeys += self.ui.lineEdit_K30.text()
-            writeKeys += self.ui.lineEdit_K31.text()
-            writeKeys += self.ui.lineEdit_K32.text()
-            writeKeys += self.ui.lineEdit_ir1.text()
-            writeKeys += self.ui.lineEdit_ir2.text()
-            writeKeys += self.ui.lineEdit_ir3.text()
-            writeKeys += self.ui.lineEdit_ir4.text()
-            writeKeys += self.ui.lineEdit_ir5.text()
-            writeKeys += self.ui.lineEdit_ir6.text()
-            if self.ui.checkBox_IR.isChecked():
-                writeKeys += "y"
-            else:
-                writeKeys += "n"
-            if self.ui.checkBox_Slider.isChecked():
-                writeKeys += "y"
-            else:
-                writeKeys += "n"
-            # writeKeys += self.ui.lineEdit_threshold.text()
-            data = writeKeys.encode("utf8") + int(self.ui.lineEdit_threshold.text()).to_bytes(1, byteorder="big")
-            # print(data)
-            ser.write(data)
-            self.ui.plainTextEdit_log.appendPlainText("写入下位机配置成功.")
+        if self.emptyCheck():
+            return 0
+        rdata = []
+        rdata.append(ord(self.ui.lineEdit_K1.text()))
+        rdata.append(ord(self.ui.lineEdit_K2.text()))
+        rdata.append(ord(self.ui.lineEdit_K3.text()))
+        rdata.append(ord(self.ui.lineEdit_K4.text()))
+        rdata.append(ord(self.ui.lineEdit_K5.text()))
+        rdata.append(ord(self.ui.lineEdit_K6.text()))
+        rdata.append(ord(self.ui.lineEdit_K7.text()))
+        rdata.append(ord(self.ui.lineEdit_K8.text()))
+        rdata.append(ord(self.ui.lineEdit_K9.text()))
+        rdata.append(ord(self.ui.lineEdit_K10.text()))
+        rdata.append(ord(self.ui.lineEdit_K11.text()))
+        rdata.append(ord(self.ui.lineEdit_K12.text()))
+        rdata.append(ord(self.ui.lineEdit_K13.text()))
+        rdata.append(ord(self.ui.lineEdit_K14.text()))
+        rdata.append(ord(self.ui.lineEdit_K15.text()))
+        rdata.append(ord(self.ui.lineEdit_K16.text()))
+        rdata.append(ord(self.ui.lineEdit_K17.text()))
+        rdata.append(ord(self.ui.lineEdit_K18.text()))
+        rdata.append(ord(self.ui.lineEdit_K19.text()))
+        rdata.append(ord(self.ui.lineEdit_K20.text()))
+        rdata.append(ord(self.ui.lineEdit_K21.text()))
+        rdata.append(ord(self.ui.lineEdit_K22.text()))
+        rdata.append(ord(self.ui.lineEdit_K23.text()))
+        rdata.append(ord(self.ui.lineEdit_K24.text()))
+        rdata.append(ord(self.ui.lineEdit_K25.text()))
+        rdata.append(ord(self.ui.lineEdit_K26.text()))
+        rdata.append(ord(self.ui.lineEdit_K27.text()))
+        rdata.append(ord(self.ui.lineEdit_K28.text()))
+        rdata.append(ord(self.ui.lineEdit_K29.text()))
+        rdata.append(ord(self.ui.lineEdit_K30.text()))
+        rdata.append(ord(self.ui.lineEdit_K31.text()))
+        rdata.append(ord(self.ui.lineEdit_K32.text()))
+        rdata.append(ord(self.ui.lineEdit_ir1.text()))
+        rdata.append(ord(self.ui.lineEdit_ir2.text()))
+        rdata.append(ord(self.ui.lineEdit_ir3.text()))
+        rdata.append(ord(self.ui.lineEdit_ir4.text()))
+        rdata.append(ord(self.ui.lineEdit_ir5.text()))
+        rdata.append(ord(self.ui.lineEdit_ir6.text()))
+        if self.ui.checkBox_IR.isChecked():
+            rdata.append(ord("y"))
+        else:
+            rdata.append(ord("n"))
+        if self.ui.checkBox_Slider.isChecked():
+            rdata.append(ord("y"))
+        else:
+            rdata.append(ord("n"))
+        rdata.append(int(self.ui.lineEdit_threshold.text()))
+        # print(data)
+        
+        head = []
+        for i in list("SetKeys%"):
+            head.append(ord(i))
+        # print(head + rdata)
+        HID.sendRawData(head + rdata)
+        self.ui.plainTextEdit_log.appendPlainText("写入下位机配置成功.")
             
         
     def on_check(self): # 点击查找设备
         self.ui.plainTextEdit_log.appendPlainText("正在查找设备,请勿重复点击...")
-        
-        if not self.findLock:
-            # device = self.findDevice()       # 查找下位机设备ID
-            self.thread = QThread()
-            self.worker = Worker()
-            self.worker.moveToThread(self.thread)
-            self.thread.started.connect(self.worker.findDevice)
-            self.worker.finished.connect(self.thread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.worker.finished.connect(self.findItLog)
-            self.thread.finished.connect(self.thread.deleteLater)
-            self.thread.start()
-            self.findLock = 1
-            # if device:
-            #     self.ui.plainTextEdit_log.appendPlainText("已找到下位机.")
+        try:
+            global HID
+            HID = USB(0x303A, 0x8222)
+            self.ui.plainTextEdit_log.appendPlainText("设备连接成功.")
+        except:
+            self.ui.plainTextEdit_log.appendPlainText("未找到设备.")
             
     def findItLog(self):
         self.findLock = 0
@@ -127,6 +296,8 @@ class MainWindow(QMainWindow):
             self.ui.plainTextEdit_log.appendPlainText("未找到下位机.")
         
     def on_save(self):  # 点击保存配置文件
+        if self.emptyCheck():
+            return 0
         config = ConfigObj("setting.ini",encoding='UTF8')
         writeConf = []
         writeConf.append(self.ui.lineEdit_K1.text())
@@ -179,30 +350,13 @@ class MainWindow(QMainWindow):
         self.ui.plainTextEdit_log.appendPlainText("写入配置文件成功.")
         
     def on_gloves(self):
-        ser = serial.Serial(device, 115200)     # 初始化下位机读取
-        ser.write("Gloves".encode("utf8"))
-        while True:
-            count = ser.inWaiting() # 获取串口缓冲区数据
-            if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv:
-                    break
-        if recv == "Change to gloves":
-            self.ui.plainTextEdit_log.appendPlainText("已切换至手套模式.")
-        pass
+        HID.sendDecData("Gloves%")
+        self.ui.plainTextEdit_log.appendPlainText("切换至手套模式.")
     
     def on_hands(self):
-        ser = serial.Serial(device, 115200)     # 初始化下位机读取
-        ser.write("Hands".encode("utf8"))
-        while True:
-            count = ser.inWaiting() # 获取串口缓冲区数据
-            if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv:
-                    break
-        if recv == "Change to hands":
-            self.ui.plainTextEdit_log.appendPlainText("已切换至空手模式.")
-        pass
+        HID.sendDecData("Hands%")
+        self.ui.plainTextEdit_log.appendPlainText("切换至空手模式.")
+        
         
     def on_exit(self):  # 点击退出应用
         sys.exit(0)
@@ -401,108 +555,6 @@ class MainWindow(QMainWindow):
             self.ui.checkBox_Slider.setChecked(0)
         self.ui.lineEdit_threshold.setText(keyValue[40])
     
-    def serial_ports(self):
-        if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(256)]
-        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # 这不包括当前的终端"/dev/tty"
-            ports = glob.glob('/dev/tty[A-Za-z]*')
-        elif sys.platform.startswith('darwin'):
-            ports = glob.glob('/dev/tty.*')
-        else:
-            raise EnvironmentError('Unsupported platform')
-
-        result = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                result.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        if len(result) == 0:
-            raise Exception     # 结果为空抛出异常
-        return result
-    
-    def findDevice(self):
-        tty = self.serial_ports()
-        for devId in tty:
-            ser = serial.Serial(devId, 115200, timeout=5)
-            count = 0
-            ser.write('check'.encode("utf8"))       # 发送Check命令
-            t1 = int(time.time())
-            while not count:
-                count = ser.inWaiting() # 获取串口缓冲区数据
-                if int(time.time()) - t1 > 1:
-                    break
-            if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv == "this":      # 检测下位机是否返回数据
-                    ser.close()
-                    return devId
-        
-class Worker(QObject):
-    deviceID = 0
-    finished = Signal(int)
-    findIt = Signal(int)
-    
-    
-    def serial_ports(self):
-        if sys.platform.startswith('win'):
-            ports = ['COM%s' % (i + 1) for i in range(256)]
-        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-            # 这不包括当前的终端"/dev/tty"
-            ports = glob.glob('/dev/tty[A-Za-z]*')
-        elif sys.platform.startswith('darwin'):
-            ports = glob.glob('/dev/tty.*')
-        else:
-            raise EnvironmentError('Unsupported platform')
-
-        result = []
-        for port in ports:
-            try:
-                s = serial.Serial(port)
-                s.close()
-                result.append(port)
-            except (OSError, serial.SerialException):
-                pass
-        if len(result) == 0:
-            raise Exception     # 结果为空抛出异常
-        if not result:
-            return 0
-        return result
-    
-    def findDevice(self):
-        # print("Finding...")
-        global device
-        device = 0
-        try: 
-            tty = self.serial_ports()
-        except:
-            # print("No TTY")
-            self.finished.emit(1)
-        if not tty:
-            # print("No TTY")
-            self.finished.emit(1)
-        for devId in tty:
-            print("DevID: " + devId)
-            ser = serial.Serial(devId, 115200, timeout=5)
-            count = 0
-            ser.write('check'.encode("utf8"))       # 发送Check命令
-            t1 = int(time.time())
-            while not count:
-                count = ser.inWaiting() # 获取串口缓冲区数据
-                if int(time.time()) - t1 > 1:
-                    break
-            if count !=0:
-                recv = str(ser.readline()[0:-2].decode("utf8")) # 读出串口数据，数据采用utf8编码
-                if recv == "this":      # 检测下位机是否返回数据
-                    ser.close()
-                    self.deviceID = devId
-                    device = devId
-                    self.findIt.emit(1)
-        self.finished.emit(1)
-
 if __name__ == "__main__":
     app = QApplication([])
     win = MainWindow()
